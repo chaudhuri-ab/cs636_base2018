@@ -26,6 +26,8 @@ devcall	ethread	(
 	ethptr = &ethertab[devptr->dvminor];
 
 	pktptr = (struct netpacket *)buf;
+        
+        byte eth_broadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; //For CS 636 Only
 
 	while(1) {
 
@@ -86,14 +88,14 @@ devcall	ethread	(
 			
 			/* See if destination address is our unicast  */
 
-			if(!memcmp(pktptr->net_ethdst,
+			if(!memcmp(pktptr->net_dst,
 						ethptr->devAddress, 6)) {
 				valid_addr = TRUE;
 
 			/* See if destination address is broadcast */
 
-			} else if(!memcmp(pktptr->net_ethdst,
-					    NetData.ethbcast,6)) {
+			} else if(!memcmp(pktptr->net_dst,
+					    eth_broadcast,6)) {
 				valid_addr = TRUE;
 
 			/* Multicast, See if we should accept it */
@@ -101,7 +103,7 @@ devcall	ethread	(
 			} else {
 				valid_addr = FALSE;
 				for(i = 0; i < (ethptr->ed_mcc); i++) {
-					if(memcmp(pktptr->net_ethdst,
+					if(memcmp(pktptr->net_dst,
 					   ethptr->ed_mca[i], 6) == 0){
 						valid_addr = TRUE;
 						break;
@@ -119,7 +121,7 @@ devcall	ethread	(
 
 		/* Reset the descriptor to max possible frame len */
 
-		rdescptr->buf1size = sizeof(struct netpacket);
+		rdescptr->buf1size = ETH_BUF_SIZE;
 
 		/* If we reach the end of the ring, mark the descriptor	*/
 

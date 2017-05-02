@@ -207,6 +207,18 @@ void	net_init (void)
 	if (tindex >= NMACADDRS) {
 		panic("net_init: no MAC address match\n");
 	}
+        
+        
+	if (host) {
+		printf("\nRunning host on %s\n", if_tab[ifprime].if_name);
+		if_tab[ifprime].if_state = IF_UP;
+	} else {
+		kprintf("Running a nat box\n");
+		for (i=0; i<NIFACES; i++) {
+			ifptr = &if_tab[i];
+			ifptr->if_state = IF_UP;
+		}
+	}
 
 	/* Othernet 1 */
 	
@@ -224,10 +236,11 @@ void	net_init (void)
 	ifptr->if_macbcast[3] = 0xff;
 	ifptr->if_macbcast[4] = 0xff;
 	ifptr->if_macbcast[5] = 0xff & bingid;
-
-	control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macucast, 0);
-	control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macbcast, 0);
-
+        
+        if (ifptr->if_state == IF_UP) {
+            control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macucast, 0);
+            control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macbcast, 0);
+        }
 
 	/* Othernet 2 */
 	
@@ -246,19 +259,11 @@ void	net_init (void)
 	ifptr->if_macbcast[4] = 0xff;
 	ifptr->if_macbcast[5] = 0xff & bingid;
 
-	control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macucast, 0);
-	control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macbcast, 0);
+        if (ifptr->if_state == IF_UP) {
+            control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macucast, 0);
+            control(ETHER0, ETH_CTRL_ADD_MCAST, (int32)ifptr->if_macbcast, 0);
+        }
 
-	if (host) {
-		printf("\nRunning host on %s\n", if_tab[ifprime].if_name);
-		if_tab[ifprime].if_state = IF_UP;
-	} else {
-		kprintf("Running a nat box\n");
-		for (i=0; i<NIFACES; i++) {
-			ifptr = &if_tab[i];
-			ifptr->if_state = IF_UP;
-		}
-	}
 
 
 	/* Create a low-level input process that reads raw frames and	*/

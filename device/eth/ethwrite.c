@@ -16,10 +16,13 @@ devcall	ethwrite	(
 	struct	eth_q_csreg *csrptr;	/* Address of device CSRs	*/
 	volatile struct	eth_q_tx_desc *descptr; /* Ptr to descriptor	*/
 	uint32 i;			/* Counts bytes during copy	*/
+        char temp;			/* hold modified othernet byte */
+
 
 	/* Change othernet source addresses to unicast */
 
 	if ( (buf[7]&0xff)==0x80 && (buf[8]&0xff)==0x0a ) {
+                temp = buf[6];
 		buf[6] &= ~1;
 	}
 
@@ -71,6 +74,11 @@ devcall	ethwrite	(
 	/* Un-suspend DMA on the device */
 
 	csrptr->tpdr = 1;
+        
+        /* restore changed othernet byte */
+	if ( (buf[7]&0xff)==0x80 && (buf[8]&0xff)==0x0a ) {
+		buf[6] = temp;
+	}
 
 	return OK;
 }
